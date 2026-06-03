@@ -7,9 +7,10 @@ function App() {
   const [input, setInput] = useState('')
   const [userId, setUserId] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [isComplete, setIsComplete] = useState(false)
+  const [cvUrl, setCvUrl] = useState<string | null>(null)
 
   useEffect(() => {
-    // Start onboarding session
     const startOnboarding = async () => {
       try {
         const response = await fetch('http://localhost:3000/onboarding/start', {
@@ -41,8 +42,33 @@ function App() {
       })
       const data = await response.json()
       setMessages(prev => [...prev, { role: 'agent', text: data.question }])
+      
+      if (data.profile.currentStep === 'complete') {
+        setIsComplete(true)
+      }
     } catch (error) {
       console.error('Failed to send response:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const generateCV = async () => {
+    if (!userId) return
+    setLoading(true)
+    try {
+      const response = await fetch('http://localhost:3000/cv/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId }),
+      })
+      const data = await response.json()
+      if (data.success) {
+        setCvUrl(data.downloadUrl)
+        setMessages(prev => [...prev, { role: 'agent', text: "Your ATS-safe CV has been generated!" }])
+      }
+    } catch (error) {
+      console.error('Failed to generate CV:', error)
     } finally {
       setLoading(false)
     }
@@ -63,16 +89,33 @@ function App() {
           ))}
           {loading && <div className="message agent">...</div>}
         </div>
-        <div className="input-area">
-          <input 
-            type="text" 
-            value={input} 
-            onChange={(e) => setInput(e.target.value)} 
-            onKeyPress={(e) => e.key === 'Enter' && handleSend()}
-            placeholder="Type your answer..."
-          />
-          <button onClick={handleSend} disabled={loading}>Send</button>
-        </div>
+        
+        {isComplete && !cvUrl && (
+          <div className="actions">
+            <button onClick={generateCV} disabled={loading}>Generate My CV</button>
+          </div>
+        )}
+        
+        {cvUrl && (
+          <div className="actions">
+            <a href={cvUrl} target="_blank" rel="noopener noreferrer" className="download-link">
+              Download CV (PDF)
+            </a>
+          </div>
+        )}
+
+        {!isComplete && (
+          <div className="input-area">
+            <input 
+              type="text" 
+              value={input} 
+              onChange={(e) => setInput(e.target.value)} 
+              onKeyPress={(e) => e.key === 'Enter' && handleSend()}
+              placeholder="Type your answer..."
+            />
+            <button onClick={handleSend} disabled={loading}>Send</button>
+          </div>
+        )}
       </main>
     </div>
   )

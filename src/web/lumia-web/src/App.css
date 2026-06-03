@@ -87,3 +87,19 @@ button {
 button:disabled {
   background-color: #ccc;
 }
+
+.actions {
+  display: flex;
+  justify-content: center;
+  padding: 10px;
+}
+
+.download-link {
+  display: inline-block;
+  padding: 10px 20px;
+  background-color: #28a745;
+  color: white;
+  text-decoration: none;
+  border-radius: 4px;
+  font-weight: bold;
+}
