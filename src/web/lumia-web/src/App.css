@@ -88,6 +88,10 @@ button:disabled {
   background-color: #ccc;
 }
 
+button.secondary {
+  background-color: #6c757d;
+}
+
 .actions {
   display: flex;
   justify-content: center;
